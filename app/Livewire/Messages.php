@@ -13,6 +13,30 @@ class Messages extends Component
 
     public Collection $messages;
 
+    public function getListeners()
+    {
+        $userId = auth()->user()->id;
+
+        return [
+            'echo:public.newMessage,.MessageCreated' => 'addMessage',
+            "echo-private:App.Models.User.{$userId},.MessageCreated" => 'addPrivateMessage',
+        ];
+    }
+
+    public function addMessage(array $event)
+    {
+        $this->messages[] = [
+            'time' => $event['model']['created_at'],
+            'message' => $event['model']['message'],
+            'private' => $event['model']['private'],
+        ];
+    }
+
+    public function addPrivateMessage(array $event)
+    {
+        $this->addMessage($event, true);
+    }
+
     public function render()
     {
         if ($authUser = auth()->user()) {
